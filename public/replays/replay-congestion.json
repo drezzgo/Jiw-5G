@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "capture": {
+    "id": "synthetic-congestion-001",
+    "capturedAt": "2026-09-01T12:05:00-05:00",
+    "originalProvider": "SYNTHETIC",
+    "description": "Fixture académico de congestión para FASE 6. No contiene datos reales de TomTom."
+  },
+  "traffic": {
+    "timestamp": "2026-09-01T12:05:00-05:00",
+    "currentSpeedKmh": 14,
+    "freeFlowSpeedKmh": 40,
+    "currentTravelTimeSeconds": 196,
+    "freeFlowTravelTimeSeconds": 70,
+    "congestionLevel": "HIGH",
+    "incidents": 1,
+    "available": true
+  },
+  "mapping": {
+    "highCongestionSpeedRatioMax": 0.55,
+    "mediumCongestionSpeedRatioMax": 0.8,
+    "vehicleArrivalRateByLevel": {
+      "LOW": 0.18,
+      "MEDIUM": 0.35,
+      "HIGH": 0.75
+    }
+  }
+}
