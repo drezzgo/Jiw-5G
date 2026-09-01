@@ -1,7 +1,7 @@
 import type { ScenarioId, SimulationConfig } from "../core/types";
 
 const base: Omit<SimulationConfig, "scenarioId"> = {
-  simulatorVersion: "0.3.0-phase3",
+  simulatorVersion: "0.4.0-phase4",
   seed: 12345,
   mode: "DEMO",
   sensorCount: 100,
