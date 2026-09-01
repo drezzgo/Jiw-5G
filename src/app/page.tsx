@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ConfigPanel, type DashboardControls } from "./components/ConfigPanel";
 import { TrafficContextCard } from "./components/TrafficContextCard";
 import { ReplayPanel } from "./components/ReplayPanel";
+import { LivePanel, type LiveCoordinatesDraft } from "./components/LivePanel";
 import { MmtcPanel } from "./components/MmtcPanel";
 import { UrllcPanel } from "./components/UrllcPanel";
 import { CriticalEventPanel } from "./components/CriticalEventPanel";
@@ -15,6 +16,8 @@ import type { DataMode, ScenarioId, SimulationConfig } from "../simulation/core/
 import { DEFAULT_TRAFFIC_MAPPING_CONFIG, mapTrafficSnapshotToSimulationContext } from "../traffic/mapping";
 import { ReplayTrafficProvider } from "../traffic/providers/ReplayTrafficProvider";
 import { SyntheticTrafficProvider } from "../traffic/providers/SyntheticTrafficProvider";
+import { TomTomTrafficProvider } from "../traffic/providers/TomTomTrafficProvider";
+import { isValidTomTomPoint, type TomTomPoint } from "../traffic/tomtom";
 import type { ReplayCapture, TrafficSnapshot } from "../traffic/types";
 
 function controlsFromScenario(scenarioId: ScenarioId, seed = 12345): DashboardControls {
@@ -55,7 +58,7 @@ function buildConfig(controls: DashboardControls): SimulationConfig {
 
 function configWithTrafficContext(
   baseConfig: SimulationConfig,
-  mode: Exclude<DataMode, "LIVE">,
+  mode: DataMode,
   traffic: TrafficSnapshot,
   replayCapture: ReplayCapture | null,
 ): SimulationConfig {
@@ -75,6 +78,12 @@ function configWithTrafficContext(
   };
 }
 
+function livePointFromDraft(draft: LiveCoordinatesDraft): TomTomPoint | null {
+  if (draft.latitude.trim() === "" || draft.longitude.trim() === "") return null;
+  const point = { latitude: Number(draft.latitude), longitude: Number(draft.longitude) };
+  return isValidTomTomPoint(point) ? point : null;
+}
+
 const initialControls = controlsFromScenario("SCENARIO_CRITICAL_EVENT");
 const initialBaseConfig = buildConfig(initialControls);
 const initialTraffic = buildDemoTrafficSnapshot(initialBaseConfig.trafficLevel, "DEMO_PREVIEW");
@@ -85,21 +94,25 @@ const initialResult = runScenarioExperiment(
 
 export default function Home() {
   const [controls, setControls] = useState<DashboardControls>(initialControls);
-  const [mode, setMode] = useState<Exclude<DataMode, "LIVE">>("DEMO");
+  const [mode, setMode] = useState<DataMode>("DEMO");
   const [result, setResult] = useState(initialResult);
   const [traffic, setTraffic] = useState<TrafficSnapshot>(initialTraffic);
   const [replayCapture, setReplayCapture] = useState<ReplayCapture | null>(null);
   const [replayError, setReplayError] = useState<string | null>(null);
+  const [liveCoordinates, setLiveCoordinates] = useState<LiveCoordinatesDraft>({ latitude: "", longitude: "" });
+  const [liveError, setLiveError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const latestAlert = useMemo(() => buildLatestCriticalAlert(result), [result]);
+  const livePoint = useMemo(() => livePointFromDraft(liveCoordinates), [liveCoordinates]);
 
   const onScenarioChange = (scenarioId: ScenarioId) => {
     setControls(controlsFromScenario(scenarioId, controls.seed));
   };
 
-  const onModeChange = (nextMode: Exclude<DataMode, "LIVE">) => {
+  const onModeChange = (nextMode: DataMode) => {
     setMode(nextMode);
     setReplayError(null);
+    setLiveError(null);
   };
 
   const run = async () => {
@@ -107,26 +120,46 @@ export default function Home() {
       setReplayError("Selecciona un Replay válido antes de ejecutar la simulación.");
       return;
     }
+    if (mode === "LIVE" && !livePoint) {
+      setLiveError("Ingresa una latitud y longitud WGS84 válidas antes de consultar TomTom.");
+      return;
+    }
+
     setRunning(true);
+    setLiveError(null);
     try {
       const executedAt = new Date().toISOString();
       const baseConfig = buildConfig(controls);
       const provider = mode === "REPLAY" && replayCapture
         ? new ReplayTrafficProvider(replayCapture)
-        : new SyntheticTrafficProvider(
-            buildDemoTrafficSnapshot(baseConfig.trafficLevel, executedAt),
-          );
+        : mode === "LIVE" && livePoint
+          ? new TomTomTrafficProvider(livePoint)
+          : new SyntheticTrafficProvider(
+              buildDemoTrafficSnapshot(baseConfig.trafficLevel, executedAt),
+            );
       const snapshot = await provider.getSnapshot();
+      setTraffic(snapshot);
+
+      if (mode === "LIVE" && !snapshot.available) {
+        setLiveError("TomTom no respondió con un contexto de tráfico utilizable. No se ejecutó una nueva simulación LIVE.");
+        return;
+      }
+
       const config = configWithTrafficContext(baseConfig, mode, snapshot, replayCapture);
       const trafficSource = mode === "REPLAY" && replayCapture
         ? `REPLAY:${replayCapture.capture.originalProvider}:${replayCapture.capture.id}`
-        : "SYNTHETIC";
-      setTraffic(snapshot);
+        : mode === "LIVE" && livePoint
+          ? `TOMTOM:${livePoint.latitude},${livePoint.longitude}`
+          : "SYNTHETIC";
       setResult(runScenarioExperiment(config, { executedAt, trafficSource }));
     } finally {
       setRunning(false);
     }
   };
+
+  const runDisabled = running
+    || (mode === "REPLAY" && !replayCapture)
+    || (mode === "LIVE" && !livePoint);
 
   return (
     <main className="dashboard-shell">
@@ -154,7 +187,7 @@ export default function Home() {
         onScenarioChange={onScenarioChange}
         onModeChange={onModeChange}
         onRun={() => void run()}
-        runDisabled={running || (mode === "REPLAY" && !replayCapture)}
+        runDisabled={runDisabled}
       />
       {mode === "REPLAY" && (
         <ReplayPanel
@@ -167,10 +200,22 @@ export default function Home() {
           onError={setReplayError}
         />
       )}
+      {mode === "LIVE" && (
+        <LivePanel
+          coordinates={liveCoordinates}
+          traffic={traffic}
+          mapping={DEFAULT_TRAFFIC_MAPPING_CONFIG}
+          error={liveError}
+          onChange={(coordinates) => {
+            setLiveCoordinates(coordinates);
+            setLiveError(null);
+          }}
+        />
+      )}
       <div className="two-column-grid">
-        <TrafficContextCard traffic={traffic} />
+        <TrafficContextCard traffic={traffic} derivedTrafficLevel={result.config.trafficLevel} />
         <section className="panel panel--run" aria-labelledby="run-title">
-          <div className="panel__heading"><div><p className="section-kicker">Ejecución activa</p><h2 id="run-title">{result.metadata.scenarioId}</h2></div><span className="status-pill status-pill--ok">COMPLETADA</span></div>
+          <div className="panel__heading"><div><p className="section-kicker">Última ejecución válida</p><h2 id="run-title">{result.metadata.scenarioId}</h2></div><span className="status-pill status-pill--ok">COMPLETADA</span></div>
           <div className="stat-grid stat-grid--compact">
             <div className="stat"><span>Modo</span><strong>{result.metadata.mode}</strong></div>
             <div className="stat"><span>Sensores</span><strong>{result.config.sensorCount}</strong></div>
@@ -193,7 +238,7 @@ export default function Home() {
 
       <footer className="dashboard-footer">
         <span>Jiw 5G · Ingeniería Telemática</span>
-        <span>DEMO + REPLAY funcionan sin servicios externos · LIVE se habilita en FASE 7</span>
+        <span>DEMO y REPLAY son autónomos · LIVE usa TomTom únicamente como contexto vial externo</span>
       </footer>
     </main>
   );

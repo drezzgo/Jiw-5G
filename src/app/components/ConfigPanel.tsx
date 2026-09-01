@@ -16,7 +16,7 @@ interface ConfigPanelProps {
   scenarioIds: readonly ScenarioId[];
   onChange: (patch: Partial<DashboardControls>) => void;
   onScenarioChange: (scenarioId: ScenarioId) => void;
-  onModeChange: (mode: Exclude<DataMode, "LIVE">) => void;
+  onModeChange: (mode: DataMode) => void;
   onRun: () => void;
   runDisabled?: boolean;
 }
@@ -38,7 +38,7 @@ export function ConfigPanel({ controls, mode, scenarioIds, onChange, onScenarioC
         <div className="mode-switch" aria-label="Modo de datos">
           <button type="button" className={`mode-switch__item ${mode === "DEMO" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("DEMO")}>DEMO</button>
           <button type="button" className={`mode-switch__item ${mode === "REPLAY" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("REPLAY")}>REPLAY</button>
-          <button type="button" className="mode-switch__item" disabled title="Se implementa en FASE 7">LIVE · F7</button>
+          <button type="button" className={`mode-switch__item ${mode === "LIVE" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("LIVE")}>LIVE</button>
         </div>
       </div>
       <div className="form-grid">
