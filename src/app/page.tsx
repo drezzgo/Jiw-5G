@@ -13,10 +13,10 @@ export default function Home() {
   return (
     <main className="page">
       <p className="eyebrow">FASE 1 · motor determinista</p>
-      <h1>Smart Crosswalk 5G Simulator</h1>
+      <h1>Jiw 5G</h1>
       <p>
-        Esta pantalla solo demuestra que el Simulation Engine TypeScript corre en el navegador y está desacoplado de React.
-        El dashboard experimental completo corresponde a la FASE 5.
+        Esta pantalla solo demuestra que el Simulation de la chimbada Engine TypeScript corre en el navegador y está desacoplado de React.
+        El dashboard experimental completo corresponde a la FASE 5, osea despuesito, no soy mago.
       </p>
 
       <section className="grid">

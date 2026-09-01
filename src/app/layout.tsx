@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Smart Crosswalk 5G Simulator",
+  title: "Jiw 5G Simulator",
   description: "Academic mMTC + URLLC simulation for a school pedestrian crossing",
 };
 
