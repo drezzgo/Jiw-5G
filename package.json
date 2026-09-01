@@ -11,6 +11,7 @@
     "test:phase1": "node -e \"require('node:fs').rmSync('.phase1-build',{recursive:true,force:true})\" && tsc -p tsconfig.simulation.json && node scripts/validate-phase1.cjs"
   },
   "dependencies": {
+    "blendy": "^0.0.1",
     "next": "^16.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

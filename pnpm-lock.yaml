@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      blendy:
+        specifier: ^0.0.1
+        version: 0.0.1
       next:
         specifier: ^16.3.3
         version: 16.3.3(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -544,6 +547,9 @@ packages:
     resolution: {integrity: sha512-H0ulySigv6icDJ1F7SjtdCD6PrhTpdYCmP0CactWy1+ekh0AFd0o1Wn5T8b+hnTmdBx19u9yhL6wvCylXMY7zw==}
     engines: {node: '>=6.0.0'}
     hasBin: true
+
+  blendy@0.0.1:
+    resolution: {integrity: sha512-6zw2to19jBTF8HchX/gLgVav9gLcV+oTxGJLCCNVMFHuUtF1FdUOP+AiL1lcVIJi8gRiY1NHhiVzgu8D2+qbig==}
 
   caniuse-lite@1.0.30001810:
     resolution: {integrity: sha512-TITQPUkaz+aVk5GL6NhOdwk1aEaNTSDPsGFWrTuhKGtjTF70jL/Oht2W4c6rXUe5fu7Ie19VIahAXHIIiWWNeg==}
@@ -1208,6 +1214,8 @@ snapshots:
   assertion-error@2.0.1: {}
 
   baseline-browser-mapping@2.11.20: {}
+
+  blendy@0.0.1: {}
 
   caniuse-lite@1.0.30001810: {}
 
