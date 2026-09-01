@@ -43,7 +43,7 @@ export function ConfigPanel({ controls, mode, scenarioIds, onChange, onScenarioC
   }, [presentationMode]);
 
   return (
-    <section className="panel panel--config" aria-labelledby="config-title">
+    <section className="panel panel--config" aria-labelledby="config-title" data-tour="config">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Configuración</p>
@@ -59,15 +59,15 @@ export function ConfigPanel({ controls, mode, scenarioIds, onChange, onScenarioC
             {presentationMode ? "Salir de presentación" : "Modo presentación"}
           </button>
           <div className="mode-switch" aria-label="Modo de datos">
-            <button type="button" className={`mode-switch__item ${mode === "DEMO" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("DEMO")}>DEMO</button>
-            <button type="button" className={`mode-switch__item ${mode === "REPLAY" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("REPLAY")}><HoverTerm id="replay" focusable={false}>REPLAY</HoverTerm></button>
-            <button type="button" className={`mode-switch__item ${mode === "LIVE" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("LIVE")}><HoverTerm id="live" focusable={false}>LIVE</HoverTerm></button>
+            <button type="button" className={`mode-switch__item ${mode === "DEMO" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("DEMO")} data-tour="mode-demo">DEMO</button>
+            <button type="button" className={`mode-switch__item ${mode === "REPLAY" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("REPLAY")} data-tour="mode-replay"><HoverTerm id="replay" focusable={false}>REPLAY</HoverTerm></button>
+            <button type="button" className={`mode-switch__item ${mode === "LIVE" ? "mode-switch__item--active" : ""}`} onClick={() => onModeChange("LIVE")} data-tour="mode-live"><HoverTerm id="live" focusable={false}>LIVE</HoverTerm></button>
           </div>
         </div>
       </div>
       <div className="form-grid">
-        <label className="field field--wide"><span>Escenario</span><select value={controls.scenarioId} onChange={(event) => onScenarioChange(event.target.value as ScenarioId)}>{scenarioIds.map((id) => <option value={id} key={id}>{scenarioLabels[id]}</option>)}</select></label>
-        <label className="field"><span><HoverTerm id="seed">Seed</HoverTerm></span><input type="number" step="1" value={controls.seed} onChange={(event) => onChange({ seed: Number(event.target.value) })} /></label>
+        <label className="field field--wide" data-tour="scenario-selector"><span>Escenario</span><select value={controls.scenarioId} onChange={(event) => onScenarioChange(event.target.value as ScenarioId)}>{scenarioIds.map((id) => <option value={id} key={id}>{scenarioLabels[id]}</option>)}</select></label>
+        <label className="field" data-tour="seed-control"><span><HoverTerm id="seed">Seed</HoverTerm></span><input type="number" step="1" value={controls.seed} onChange={(event) => onChange({ seed: Number(event.target.value) })} /></label>
         <label className="field"><span>Sensores</span><input type="number" min="1" step="1" value={controls.sensorCount} onChange={(event) => onChange({ sensorCount: Number(event.target.value) })} /></label>
         <label className="field"><span>Duración (s)</span><input type="number" min="1" step="1" value={controls.durationSeconds} onChange={(event) => onChange({ durationSeconds: Number(event.target.value) })} /></label>
         <label className="field field--advanced"><span>Umbral de riesgo</span><input type="number" min="0" max="1" step="0.01" value={controls.riskThreshold} onChange={(event) => onChange({ riskThreshold: Number(event.target.value) })} /></label>
@@ -77,7 +77,7 @@ export function ConfigPanel({ controls, mode, scenarioIds, onChange, onScenarioC
       </div>
       <div className="config-footer">
         <p>Los valores editables son parámetros experimentales del modelo, no requisitos 3GPP.</p>
-        <button type="button" className="button button--primary" onClick={onRun} disabled={runDisabled}>Ejecutar simulación</button>
+        <button type="button" className="button button--primary" onClick={onRun} disabled={runDisabled} data-tour="run-simulation">Ejecutar simulación</button>
       </div>
     </section>
   );

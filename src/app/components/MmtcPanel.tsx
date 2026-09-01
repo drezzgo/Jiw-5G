@@ -11,7 +11,7 @@ export function MmtcPanel({ result }: { result: ScenarioExperimentResult }) {
   const proposed = result.mmtc.proposed.metrics;
 
   return (
-    <section className="panel" aria-labelledby="mmtc-title">
+    <section className="panel" aria-labelledby="mmtc-title" data-tour="mmtc">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Acceso masivo</p>

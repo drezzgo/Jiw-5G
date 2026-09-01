@@ -18,6 +18,8 @@ import { ReplayTrafficProvider } from "../traffic/providers/ReplayTrafficProvide
 import { SyntheticTrafficProvider } from "../traffic/providers/SyntheticTrafficProvider";
 import { TomTomTrafficProvider } from "../traffic/providers/TomTomTrafficProvider";
 import { isValidTomTomPoint, type TomTomPoint } from "../traffic/tomtom";
+import { coordinatesFromLivePreset, DEFAULT_LIVE_LOCATION_PRESET } from "../traffic/livePresets";
+import { PresentationLauncher } from "./presentation/PresentationLauncher";
 import type { ReplayCapture, TrafficSnapshot } from "../traffic/types";
 
 function controlsFromScenario(scenarioId: ScenarioId, seed = 12345): DashboardControls {
@@ -99,7 +101,7 @@ export default function Home() {
   const [traffic, setTraffic] = useState<TrafficSnapshot>(initialTraffic);
   const [replayCapture, setReplayCapture] = useState<ReplayCapture | null>(null);
   const [replayError, setReplayError] = useState<string | null>(null);
-  const [liveCoordinates, setLiveCoordinates] = useState<LiveCoordinatesDraft>({ latitude: "", longitude: "" });
+  const [liveCoordinates, setLiveCoordinates] = useState<LiveCoordinatesDraft>(() => coordinatesFromLivePreset(DEFAULT_LIVE_LOCATION_PRESET));
   const [liveError, setLiveError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const latestAlert = useMemo(() => buildLatestCriticalAlert(result), [result]);
@@ -163,7 +165,7 @@ export default function Home() {
 
   return (
     <main className="dashboard-shell">
-      <header className="hero">
+      <header className="hero" data-tour="hero">
         <div>
           <p className="eyebrow">Simulación académica · mMTC + URLLC</p>
           <h1>Jiw 5G</h1>
@@ -176,9 +178,10 @@ export default function Home() {
           <strong>{result.metadata.seed}</strong>
         </div>
       </header>
-      <div className="academic-warning">
+      <div className="academic-warning" data-tour="scope">
         <strong>Alcance del modelo:</strong> compara estrategias bajo supuestos de simulación. No demuestra cumplimiento real de 3GPP; el energy proxy es adimensional y la independencia de rutas URLLC es un supuesto explícito.
       </div>
+      <PresentationLauncher />
       <ConfigPanel
         controls={controls}
         mode={mode}
@@ -214,7 +217,7 @@ export default function Home() {
       )}
       <div className="two-column-grid">
         <TrafficContextCard traffic={traffic} derivedTrafficLevel={result.config.trafficLevel} />
-        <section className="panel panel--run" aria-labelledby="run-title">
+        <section className="panel panel--run" aria-labelledby="run-title" data-tour="run-result">
           <div className="panel__heading"><div><p className="section-kicker">Última ejecución válida</p><h2 id="run-title">{result.metadata.scenarioId}</h2></div><span className="status-pill status-pill--ok">COMPLETADA</span></div>
           <div className="stat-grid stat-grid--compact">
             <div className="stat"><span>Modo</span><strong>{result.metadata.mode}</strong></div>

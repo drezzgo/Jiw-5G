@@ -76,7 +76,7 @@ export function ExploreTopicButton({
 
   return (
     <>
-      <button type="button" className="explore-button" data-blendy-from={blendyId} onClick={open}>
+      <button type="button" className="explore-button" data-blendy-from={blendyId} data-tour={`explore-${topicId}`} onClick={open}>
         <span>Explorar cómo funciona</span>
       </button>
 
@@ -90,6 +90,7 @@ export function ExploreTopicButton({
           <div className="explainer-modal" data-blendy-to={blendyId}>
             <article
               className="explainer-card"
+              data-tour={`explainer-${topicId}`}
               role="dialog"
               aria-modal="true"
               aria-labelledby={`${blendyId}-title`}
@@ -99,10 +100,10 @@ export function ExploreTopicButton({
                   <p className="section-kicker">{topic.kicker}</p>
                   <h2 id={`${blendyId}-title`}>{topic.title}</h2>
                 </div>
-                <button ref={closeRef} type="button" className="explainer-close" onClick={close} aria-label="Cerrar explicación">×</button>
+                <button ref={closeRef} type="button" className="explainer-close" data-tour={`explainer-${topicId}-close`} onClick={close} aria-label="Cerrar explicación">×</button>
               </header>
 
-              <section className="simple-story">
+              <section className="simple-story" data-tour={`explainer-${topicId}-simple`}>
                 <span className="explainer-section__label">Primero: la idea sin tecnicismos</span>
                 <p className="simple-story__lead">{pedagogy.lead}</p>
                 <div className="simple-story__grid">

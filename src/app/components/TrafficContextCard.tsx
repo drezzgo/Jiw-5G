@@ -16,7 +16,7 @@ export function TrafficContextCard({ traffic, derivedTrafficLevel }: TrafficCont
     : replay ? "status-pill--replay" : "status-pill--demo";
   const origin = live ? "TomTom Traffic API" : replay ? "Archivo Replay" : "Sintético";
   return (
-    <section className="panel panel--traffic" aria-labelledby="traffic-title">
+    <section className="panel panel--traffic" aria-labelledby="traffic-title" data-tour="traffic-context">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Contexto externo</p>
