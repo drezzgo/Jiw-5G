@@ -15,3 +15,8 @@ export * from "../urlcc/workload";
 export * from "../urlcc/simulate";
 export * from "../urlcc/compare";
 export * from "../urlcc/metrics";
+export * from "../experiments/types";
+export * from "../experiments/summary";
+export * from "../experiments/run";
+export * from "../experiments/matrix";
+export * from "../experiments/export";

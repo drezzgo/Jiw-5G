@@ -153,3 +153,15 @@ FASE 4–5, obligatorias antes de cerrar el MVP:
 - consolidar comparación mMTC + URLLC por escenario y estrategia;
 - verificar tablas agregadas contra logs;
 - exportar resultados y garantizar que las métricas del dashboard correspondan exactamente a los logs.
+
+## 11. FASE 4 — comparación experimental consolidada
+
+FASE 4 no introduce un nuevo modelo de red. Compone las comparaciones ya validadas de mMTC y URLLC para producir una unidad experimental por escenario.
+
+`runScenarioExperiment(config)` devuelve metadata, configuración, ambos subsistemas y un summary de beneficios/costos. `runExperimentMatrix()` ejecuta por defecto los cinco escenarios con la misma seed.
+
+Para métricas donde "menor es mejor", la reducción relativa se define como `(baseline - proposed) / baseline`. Si el baseline es cero se devuelve `null`, evitando porcentajes indefinidos. Los cambios de tasas (success rate, reliability, delivery rate) se expresan como diferencia absoluta PROPOSED - BASELINE.
+
+El costo de redundancia URLLC se mantiene separado de los beneficios: `redundancyOverheadIncrease = proposedOverhead - baselineOverhead`. No se presenta la redundancia como mejora gratuita.
+
+La capa también produce estructuras JSON/CSV puras para que FASE 5 pueda implementar descarga en navegador sin mover lógica de métricas a React. JSON conserva configuración/logs completos; CSV aplana dos filas por escenario (BASELINE y PROPOSED) con métricas principales.
