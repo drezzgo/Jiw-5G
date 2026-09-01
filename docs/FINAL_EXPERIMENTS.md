@@ -1,84 +1,167 @@
-# FASE 9B.2 — Diseño experimental reproducible
+# Metodología experimental final
 
-Esta fase agrega un laboratorio separado del dashboard principal en `/experimentos`.
-Su objetivo no es cambiar el modelo de simulación, sino ejecutar el mismo modelo varias veces con semillas distintas y resumir los resultados mediante estadística descriptiva.
+## 1. Objetivo
 
-## Por qué usar varias semillas
+La fase experimental no pretende estimar el rendimiento de una red 5G real. Su objetivo es comparar dos estrategias dentro del mismo modelo y bajo condiciones controladas.
 
-Una sola seed describe una realización pseudoaleatoria concreta. Puede ser útil para una demostración reproducible, pero no es suficiente para describir el comportamiento típico del modelo.
+## 2. Comparación justa
 
-Por eso Jiw 5G ejecuta varias réplicas y conserva:
+Dentro de una ejecución, Baseline y Proposed reciben:
 
-- cada resultado individual;
+- misma seed principal;
+- misma configuración;
+- mismo workload común cuando corresponde;
+- misma realización de Ruta A para URLLC.
+
+La Ruta B solo existe en Proposed y usa un stream pseudoaleatorio independiente dentro del modelo.
+
+## 3. Matriz principal
+
+Configuración utilizada para el cierre experimental:
+
+```text
+Seed inicial: 12345
+Réplicas: 20
+Seeds: 12345 ... 12364
+Escenarios: 5
+Total: 100 ejecuciones
+```
+
+Cada ejecución contiene internamente Baseline y Proposed.
+
+## 4. Escalabilidad
+
+Preset de escalabilidad:
+
+```text
+Escenarios:
+- SCENARIO_HIGH_DENSITY
+- SCENARIO_CONGESTION_CRITICAL
+
+Cantidad de sensores:
+50, 100, 200, 300, 500, 750, 1000
+
+Réplicas utilizadas en cierre: 10
+```
+
+Pregunta experimental:
+
+> ¿Cómo evoluciona la carga del modelo mMTC al aumentar la cantidad de sensores y se conserva la ventaja relativa de Proposed?
+
+No se interpreta como prueba de escalabilidad de una red 5G comercial.
+
+## 5. Estadística descriptiva
+
+Para los valores por réplica se utilizan:
+
 - media;
 - mediana;
 - mínimo;
 - máximo;
 - desviación estándar muestral.
 
-No se realizan pruebas de significancia estadística ni se afirma independencia estadística perfecta entre seeds consecutivas. Las seeds son entradas deterministas distintas al PRNG del simulador.
+No se presentan p-values ni afirmaciones de significancia estadística.
 
-## Preset 1 — Matriz principal
+## 6. Evidencia principal observada en la matriz controlada
 
-Ejecuta los cinco escenarios con la cantidad de sensores definida por cada escenario:
+Los siguientes valores resumen la matriz principal ejecutada durante el cierre del proyecto. Deben citarse como **resultados del simulador bajo esta configuración**, no como mediciones físicas.
 
-- SCENARIO_NORMAL;
-- SCENARIO_HIGH_DENSITY;
-- SCENARIO_CRITICAL_EVENT;
-- SCENARIO_ROUTE_FAILURE;
-- SCENARIO_CONGESTION_CRITICAL.
+### NORMAL — 50 sensores
 
-Pregunta principal: **¿en qué escenarios la estrategia propuesta mejora el comportamiento y cuál es el costo?**
+Aproximadamente:
 
-## Preset 2 — Escalabilidad
+- transmisiones mMTC: `500 → 39.6`;
+- reducción de transmisiones: `~92 %`;
+- `energyProxy`: `545 → 89.2`;
+- reducción de `energyProxy`: `~84 %`.
 
-Ejecuta inicialmente:
+Con capacidad suficiente, ambas estrategias pueden mantener éxito de transmisión alto. El principal efecto es evitar tráfico ordinario innecesario.
 
-- SCENARIO_HIGH_DENSITY;
-- SCENARIO_CONGESTION_CRITICAL;
+### HIGH_DENSITY — 300 sensores
 
-para:
+Aproximadamente:
 
-`50, 100, 200, 300, 500, 750, 1000` sensores.
+- transmisiones: `3000 → 239`;
+- reducción de transmisiones: `~92 %`;
+- colisiones: `~8625 → 0`;
+- `energyProxy`: `~10027 → 537`;
+- tasa de éxito: `40 % → 100 %` en la matriz observada.
 
-Pregunta principal: **¿cómo cambian las transmisiones y colisiones mMTC cuando aumenta el número de dispositivos?**
+La interpretación correcta es que la transmisión por excepción reduce tanto el workload efectivo que el Proposed deja de saturar el canal bajo esta configuración. No debe atribuirse toda la mejora exclusivamente al backoff.
 
-Los valores de N son parámetros experimentales elegidos para observar tendencia. No representan un requisito 3GPP.
+### CRITICAL_EVENT — 100 sensores
 
-## Réplicas recomendadas
+En las réplicas que contienen eventos críticos se observa una reducción importante de latencia en Proposed, mientras Baseline puede conservar buena fiabilidad cuando Ruta A no está degradada.
 
-- 5: comprobación rápida durante desarrollo;
-- 10: exploración de tendencias;
-- 20–30: candidato para resultados finales si el tiempo de ejecución del navegador sigue siendo razonable.
+La conclusión útil es el trade-off:
 
-La cantidad final debe quedar registrada en el informe junto con la lista de seeds utilizada.
+```text
+prioridad + redundancia
+→ menor latencia experimental
+→ mayor costo físico de copias
+```
 
-## Comparación justa
+### ROUTE_FAILURE — 100 sensores
 
-Dentro de cada ejecución, BASELINE y PROPOSED reciben el mismo workload determinista y la misma seed. Por ello las diferencias observadas se atribuyen al mecanismo comparado dentro de los supuestos del modelo y no a workloads distintos.
+Es el escenario que mejor muestra el beneficio de la redundancia del modelo:
 
-## Exportaciones
+- degradación explícita de Ruta A;
+- pérdidas y latencia mayores en Baseline;
+- Proposed puede recuperar alertas mediante Ruta B;
+- el overhead físico se aproxima al doble cuando ambas rutas están activas.
 
-### CSV crudo
+### CONGESTION_CRITICAL — 300 sensores
 
-Una fila por:
+La matriz observada mostró simultáneamente:
 
-`escenario × sensorCount × seed × estrategia`
+- fuerte reducción de transmisiones mMTC;
+- reducción muy alta de colisiones;
+- reducción importante de `energyProxy`;
+- latencia crítica Proposed por debajo de la del Baseline en las ejecuciones con eventos.
 
-Es el formato recomendado para análisis posterior en pandas/Colab.
+Este escenario es el más representativo de la integración conceptual mMTC + URLLC.
 
-### CSV agregado
+## 7. Advertencia de agregación URLLC
 
-Una fila por:
+En la versión académica estable existe una limitación conocida: una réplica con `criticalEvents = 0` puede aportar `reliability = 0` y `redundancyOverhead = 0` al agregador por réplica.
 
-`escenario × sensorCount`
+Esto **no significa que haya fallado una alerta**, sino que no hubo una alerta que medir.
 
-Contiene medias de las principales métricas BASELINE/PROPOSED.
+Por ello:
 
-### JSON
+- las ejecuciones individuales y el CSV crudo son la fuente preferida para interpretar URLLC;
+- las latencias `null` se interpretan como “sin observación”;
+- no se debe afirmar una reliability global a partir de un promedio que mezcle réplicas sin eventos;
+- esta limitación no modifica las ejecuciones físicas individuales del simulador.
 
-Conserva resultados individuales, agregados, seeds, metadata y estadísticas descriptivas completas.
+La limitación se conserva documentada para evitar introducir cambios metodológicos tardíos antes de la entrega.
 
-## Interpretación académica
+## 8. LIVE y REPLAY
 
-Los resultados de esta fase son **resultados del simulador bajo sus parámetros y supuestos**. No son mediciones de una red 5G real y no prueban cumplimiento de KPIs 3GPP.
+TomTom LIVE se utiliza como contexto demostrativo, no como base de la matriz estadística.
+
+Para conservar un caso real reproducible:
+
+```text
+LIVE → TrafficSnapshot → Guardar como Replay → REPLAY
+```
+
+Así se separa la variación externa del tráfico de la variación pseudoaleatoria del simulador.
+
+## 9. Archivos de evidencia
+
+Para conservar trazabilidad se recomienda guardar junto al material de entrega:
+
+```text
+matriz-principal/
+  CSV crudo
+  CSV agregado
+  JSON auditable
+
+escalabilidad/
+  CSV crudo
+  CSV agregado
+
+replays/
+  captura TomTom utilizada en la demostración, si se conserva
+```
