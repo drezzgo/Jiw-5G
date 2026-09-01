@@ -11,6 +11,15 @@ export function energyProxy(
   return transmittedMessages * energyTxUnits + idleUnits * energyIdleUnits;
 }
 
+export function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
+}
+
 export function percentile(values: number[], p: number): number | null {
   if (values.length === 0) return null;
   if (p < 0 || p > 1) throw new Error("p must be between 0 and 1");

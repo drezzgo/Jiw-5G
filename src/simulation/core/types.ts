@@ -42,6 +42,10 @@ export interface MmtcConfig {
 
 export interface UrllcConfig {
   latencyThresholdMs: number;
+  /** Experimental queue delay applied to BASELINE alerts sharing ordinary resources. */
+  baselineSharedQueueDelayMs: number;
+  /** Experimental residual queue delay after granting priority to PROPOSED alerts. */
+  proposedPriorityQueueDelayMs: number;
   routeA: RouteConfig;
   routeB: RouteConfig;
 }
