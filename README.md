@@ -1,73 +1,216 @@
-## Sobre el nombre Jiw 5G
+# Jiw 5G
 
-Jiw 5G adopta su nombre como una referencia al pueblo Jiw presente en la
-región del Guaviare, Colombia. El nombre busca darle al proyecto una identidad
-territorial y latinoamericana, en lugar de recurrir innecesariamente a una
-denominación íntegramente en inglés.
+**Simulador académico de cruce peatonal escolar inteligente con integración conceptual de mMTC y URLLC.**
 
-La relación con el proyecto también parte del concepto de movilidad peatonal,
-ya que el sistema estudia un escenario de protección de personas que transitan
-por un cruce escolar.
+Jiw 5G es una aplicación web desarrollada para la asignatura **Teoría de la Información**. Su objetivo es comparar, mediante un modelo simplificado y reproducible, dos estrategias de comunicación dentro de un mismo cruce peatonal escolar inteligente:
 
-## Estado
+- **mMTC** para la adquisición masiva de datos provenientes de sensores.
+- **URLLC** para el transporte prioritario de alertas críticas hacia el controlador/actuador.
 
-**FASE 1 implementada:** motor determinista TypeScript, PRNG con seed, escenarios configurables, detección de evento crítico, EventBus local, logs reproducibles y preview web.
+> Jiw 5G **no implementa una pila 5G NR completa ni pretende certificar cumplimiento 3GPP**. Modela únicamente fenómenos relevantes para el experimento: generación de mensajes, concurrencia, colisiones, reintentos, backoff, colas, latencia, pérdida, prioridad, redundancia y un proxy energético simplificado.
 
-Las estrategias de red mMTC/URLLC están especificadas, pero su simulación detallada corresponde a FASES 2 y 3.
+## Idea general
 
-## Requisitos
-
-- Node.js 20.9 o superior.
-- npm.
-
-## Ejecución local
-
-```bash
-npm install
-npm run dev
+```text
+Sensores
+  ↓
+mMTC
+  ↓
+Adquisición y detección de riesgo
+  ↓
+¿Evento normal o crítico?
+  ├── normal → flujo ordinario
+  └── crítico → URLLC → semáforo/actuador
 ```
 
-Abrir `http://localhost:3000`.
+La condición crítica del modelo se activa cuando coinciden:
 
-## Pruebas
-
-Después de `npm install`:
-
-```bash
-npm test
+```text
+peatón presente
+AND vehículo aproximándose
+AND riesgo estimado > umbral
 ```
 
-También existe una validación de FASE 1 sin Vitest en tiempo de ejecución:
+## Baseline vs Proposed
 
-```bash
-npm run test:phase1
+### mMTC
+
+**Baseline:** los sensores generan reportes periódicos y compiten por una capacidad de canal finita. En condiciones de alta concurrencia pueden aparecer colisiones, reintentos y fallos.
+
+**Proposed:** utiliza transmisión por excepción para evitar mensajes ordinarios innecesarios. Cuando existe competencia entre mensajes no críticos puede aplicar backoff pseudoaleatorio determinista.
+
+### URLLC
+
+**Baseline:** una alerta crítica utiliza una única Ruta A y una cola compartida/ordinaria.
+
+**Proposed:** la alerta recibe prioridad y se envían copias por Ruta A y Ruta B. La primera copia válida en llegar se considera la entrega lógica.
+
+La independencia entre las rutas A y B es un **supuesto experimental del simulador**, no una garantía de una red 5G real.
+
+## Modos de tráfico
+
+### DEMO
+
+Usa configuraciones sintéticas controladas. Es el modo recomendado para explicar el funcionamiento del simulador y realizar comparaciones reproducibles.
+
+### REPLAY
+
+Carga una captura versionada de contexto de tráfico y reproduce la transformación usando el mismo mapping almacenado. Permite repetir una prueba sin depender de cambios externos.
+
+### LIVE
+
+Consulta contexto vial mediante TomTom a través de `/api/traffic`. La API key permanece en el servidor mediante `TOMTOM_API_KEY` y **nunca debe exponerse como `NEXT_PUBLIC_*`**.
+
+TomTom aporta contexto externo de tráfico; **no modela mMTC ni URLLC**.
+
+## Escenarios incluidos
+
+- `SCENARIO_NORMAL`
+- `SCENARIO_HIGH_DENSITY`
+- `SCENARIO_CRITICAL_EVENT`
+- `SCENARIO_ROUTE_FAILURE`
+- `SCENARIO_CONGESTION_CRITICAL`
+
+Los escenarios son configuraciones del mismo motor, no simuladores independientes.
+
+## Dashboard pedagógico
+
+La interfaz está diseñada para dos públicos:
+
+- una persona no técnica puede entender primero la idea y el resultado;
+- una persona técnica puede abrir términos, ecuaciones, supuestos y fragmentos del código real.
+
+Incluye:
+
+- popovers conceptuales;
+- ayudas por hover/focus para términos técnicos en inglés;
+- tarjetas expandibles con Blendy;
+- explicación simple dominante y resumen técnico breve;
+- ecuaciones relevantes;
+- fragmentos de implementación;
+- modo presentación.
+
+## Laboratorio experimental
+
+La ruta:
+
+```text
+/experimentos
 ```
 
-## Variables de entorno
+permite ejecutar múltiples réplicas deterministas usando distintas seeds y exportar:
 
-Copiar `.env.example` a `.env.local` únicamente cuando se implemente LIVE:
+- CSV crudo: una fila por seed/escenario/estrategia;
+- CSV agregado: resumen por escenario y cantidad de sensores;
+- JSON auditable: configuración, métricas y agregados sin logs masivos.
 
-```bash
-TOMTOM_API_KEY=
+Los logs detallados se excluyen del JSON replicado para evitar exportaciones de tamaño excesivo en navegador.
+
+## Métricas principales
+
+### mMTC
+
+- mensajes generados;
+- mensajes transmitidos;
+- transmisiones evitadas;
+- intentos físicos;
+- colisiones;
+- reintentos;
+- mensajes exitosos/fallidos;
+- tasa de éxito;
+- utilización del canal;
+- `energyProxy`.
+
+`energyProxy` es una **métrica adimensional**:
+
+```text
+energyProxy = intentos_tx · E_tx + pasos_idle · E_idle
 ```
 
-Nunca usar `NEXT_PUBLIC_TOMTOM_API_KEY` ni subir claves al repositorio.
+No representa joules, watts ni consumo físico de un módem 5G.
 
-## Modos de datos
+### URLLC
 
-- `DEMO`: datos sintéticos reproducibles.
-- `REPLAY`: snapshot/archivo previamente guardado.
-- `LIVE`: proveedor externo por `/api/traffic`; integración TomTom se realizará en FASE 7.
+- eventos críticos;
+- alertas entregadas/perdidas;
+- latencia media;
+- mediana;
+- P95 y P99;
+- latencia máxima;
+- entregas dentro del umbral;
+- fiabilidad experimental;
+- copias físicas enviadas;
+- overhead de redundancia.
 
-Todos implementan el mismo contrato `TrafficDataProvider`.
+La fiabilidad experimental se interpreta respecto al **umbral de latencia configurado para el experimento**.
 
-## Estructura
+## Reproducibilidad
 
-- `src/simulation`: núcleo TypeScript puro.
-- `src/traffic`: proveedores y tipos de contexto vial.
-- `src/app`: interfaz Next.js y API routes.
-- `docs/MODEL_SPEC.md`: decisiones, métricas y supuestos académicos.
+Jiw 5G utiliza un PRNG determinista. Una ejecución se considera reproducible cuando conserva:
 
-## Nota sobre `package-lock.json`
+```text
+misma seed
++ misma configuración
++ mismo Replay/contexto
++ misma versión del simulador
+```
 
-Este entorno de generación no tuvo acceso al registry de npm para resolver el árbol transitivo. Se incluye el lockfile raíz solicitado; al ejecutar `npm install` con conectividad, npm completará/normalizará el árbol transitivo. Después de esa primera instalación, debe versionarse el `package-lock.json` resultante para congelar exactamente dependencias del proyecto.
+El timestamp de ejecución no forma parte de la salida determinista.
+
+## Instalación
+
+Requisitos del proyecto:
+
+- Node.js según `package.json` (`24.x` en la versión académica estable)
+- pnpm
+
+```powershell
+pnpm install
+```
+
+Para desarrollo:
+
+```powershell
+pnpm dev
+```
+
+Para validar:
+
+```powershell
+pnpm run test:phase1
+pnpm test
+pnpm build
+```
+
+## TomTom local
+
+Crear `.env.local`:
+
+```text
+TOMTOM_API_KEY=tu_clave_real
+```
+
+No subir `.env.local` al repositorio.
+
+La plantilla `.env.example` debe conservar la variable vacía.
+
+## Documentación
+
+- [Arquitectura](docs/ARCHITECTURE.md)
+- [Especificación del modelo](docs/MODEL_SPEC.md)
+- [Metodología experimental](docs/FINAL_EXPERIMENTS.md)
+- [Limitaciones](docs/LIMITATIONS.md)
+- [Guía de sustentación](docs/PRESENTATION_GUIDE.md)
+- [Validación final](docs/VALIDATION_FINAL.md)
+- [Notas de release v1.0.0](docs/RELEASE_NOTES_v1.0.0.md)
+
+## Alcance académico
+
+El proyecto busca responder experimentalmente preguntas como:
+
+1. ¿Cuánto tráfico puede evitar una estrategia mMTC basada en transmisión por excepción?
+2. ¿Qué ocurre con colisiones, reintentos y proxy energético al aumentar la concurrencia?
+3. ¿Qué beneficio ofrece prioridad + redundancia para alertas críticas bajo congestión o fallo de ruta?
+4. ¿Qué costo introduce la redundancia en términos de copias físicas?
+
+Las conclusiones deben formularse siempre como **resultados del modelo bajo sus parámetros y supuestos experimentales**, no como mediciones de una red 5G desplegada.
