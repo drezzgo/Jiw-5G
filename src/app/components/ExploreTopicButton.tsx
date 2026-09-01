@@ -4,9 +4,12 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { createPortal } from "react-dom";
 import { createBlendy, type Blendy } from "blendy";
 import "../explainability.css";
+import "../phase9b.css";
 import { explainabilityTopics, getGlossaryEntry } from "../explainability/catalog";
+import { pedagogicalTopics } from "../explainability/presentation";
 import { githubFileUrl } from "../explainability/github";
 import type { KnowledgeKind } from "../explainability/types";
+import { HoverTerm } from "./HoverTerm";
 
 const kindLabels: Record<KnowledgeKind, string> = {
   CONCEPTO: "Concepto",
@@ -24,6 +27,7 @@ export function ExploreTopicButton({
   evidence?: ReactNode;
 }) {
   const topic = explainabilityTopics[topicId];
+  const pedagogy = pedagogicalTopics[topicId];
   const reactId = useId().replaceAll(":", "");
   const blendyId = `jiw-explain-${topicId}-${reactId}`;
   const blendy = useRef<Blendy | null>(null);
@@ -54,7 +58,6 @@ export function ExploreTopicButton({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
     };
@@ -76,6 +79,7 @@ export function ExploreTopicButton({
       <button type="button" className="explore-button" data-blendy-from={blendyId} onClick={open}>
         <span>Explorar cómo funciona</span>
       </button>
+
       {showModal && createPortal(
         <div
           className="explainer-backdrop"
@@ -98,18 +102,50 @@ export function ExploreTopicButton({
                 <button ref={closeRef} type="button" className="explainer-close" onClick={close} aria-label="Cerrar explicación">×</button>
               </header>
 
-              <div className="explainer-card__grid">
-                <section className="explainer-section explainer-section--simple">
-                  <span className="explainer-section__label">Para cualquier persona</span>
-                  <h3>¿Qué está pasando?</h3>
-                  <p>{topic.simpleSummary}</p>
+              <section className="simple-story">
+                <span className="explainer-section__label">Primero: la idea sin tecnicismos</span>
+                <p className="simple-story__lead">{pedagogy.lead}</p>
+                <div className="simple-story__grid">
+                  <div className="simple-story__item">
+                    <strong>¿Por qué importa?</strong>
+                    <p>{pedagogy.whyItMatters}</p>
+                  </div>
+                  <div className="simple-story__item">
+                    <strong>Una forma de imaginarlo</strong>
+                    <p>{pedagogy.analogy}</p>
+                  </div>
+                </div>
+              </section>
+
+              {evidence ? (
+                <section className="explainer-section explainer-section--evidence">
+                  <span className="explainer-section__label">Esta ejecución</span>
+                  <h3>¿Qué ocurrió en la simulación que estás viendo?</h3>
+                  {evidence}
                 </section>
-                <section className="explainer-section">
-                  <span className="explainer-section__label">Lectura técnica</span>
-                  <h3>¿Cómo lo modelamos?</h3>
-                  <p>{topic.technicalSummary}</p>
-                </section>
-              </div>
+              ) : null}
+
+              <section className="compact-technical" aria-label="Resumen técnico">
+                <div className="compact-technical__text">
+                  <span className="explainer-section__label">Técnicamente, en una línea</span>
+                  <p>{pedagogy.technicalOneLiner}</p>
+                </div>
+                <div className="equation-list">
+                  {pedagogy.equations.map((equation) => (
+                    <div className="equation-card" key={equation.expression}>
+                      <code>{equation.expression}</code>
+                      <span>{equation.meaning}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {pedagogy.englishTerms.length > 0 ? (
+                <div className="english-terms-strip" aria-label="Términos en inglés">
+                  <strong>Términos en inglés · pasa el cursor</strong>
+                  {pedagogy.englishTerms.map((id) => <HoverTerm id={id} key={id} />)}
+                </div>
+              ) : null}
 
               <section className="explainer-section">
                 <span className="explainer-section__label">Flujo del algoritmo</span>
@@ -119,24 +155,19 @@ export function ExploreTopicButton({
                 </ol>
               </section>
 
-              <section className="explainer-section explainer-section--code">
-                <div className="explainer-code-heading">
-                  <div>
-                    <span className="explainer-section__label">Código real del proyecto</span>
-                    <h3>{topic.code.file}</h3>
+              <details className="explainer-code-disclosure">
+                <summary>Ver el código real que implementa este comportamiento</summary>
+                <section className="explainer-section explainer-section--code">
+                  <div className="explainer-code-heading">
+                    <div>
+                      <span className="explainer-section__label">Código real del proyecto</span>
+                      <h3>{topic.code.file}</h3>
+                    </div>
+                    <a href={githubFileUrl(topic.code.file)} target="_blank" rel="noreferrer">Ver archivo en GitHub ↗</a>
                   </div>
-                  <a href={githubFileUrl(topic.code.file)} target="_blank" rel="noreferrer">Ver archivo en GitHub ↗</a>
-                </div>
-                <pre className="code-block"><code>{topic.code.snippet}</code></pre>
-              </section>
-
-              {evidence ? (
-                <section className="explainer-section explainer-section--evidence">
-                  <span className="explainer-section__label">Esta ejecución</span>
-                  <h3>Evidencia visible ahora</h3>
-                  {evidence}
+                  <pre className="code-block"><code>{topic.code.snippet}</code></pre>
                 </section>
-              ) : null}
+              </details>
 
               <section className="explainer-section">
                 <span className="explainer-section__label">Rigor académico</span>
