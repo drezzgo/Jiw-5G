@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import "driver.js/dist/driver.css";
 import "./globals.css";
+import "./presentation.css";
 
 export const metadata: Metadata = {
-  title: "Jiw 5G · Simulador de cruce peatonal inteligente",
-  description: "Simulador académico web-first para comparar estrategias mMTC y URLLC en un cruce peatonal escolar inteligente.",
+  title: "Jiw 5G · Simulador académico mMTC + URLLC",
+  description: "Simulador académico y demostración interactiva de un cruce peatonal escolar inteligente con mMTC, URLLC, REPLAY y contexto vial TomTom.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -14,7 +14,7 @@ function RouteCard({ route }: { route: RouteDisplay }) {
 }
 export function CriticalEventPanel({ alert }: { alert: CriticalAlertDisplay | null }) {
   return (
-    <section className="panel panel--critical" aria-labelledby="critical-title">
+    <section className="panel panel--critical" aria-labelledby="critical-title" data-tour="critical-event">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Trazabilidad del evento</p>

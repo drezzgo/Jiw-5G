@@ -134,3 +134,39 @@ Respuesta:
 ## Cierre recomendado
 
 > Jiw 5G no intenta demostrar que esta configuración sea una red 5G real. Demuestra, dentro de un modelo reproducible, por qué reducir tráfico ordinario y dar prioridad y redundancia a eventos críticos puede ser útil en un cruce escolar inteligente, y también muestra el costo de esa decisión.
+
+---
+
+## Modo de exposición guiada con Driver.js
+
+La versión final incorpora dos recorridos desde el dashboard:
+
+- **Exposición completa:** narrativa guiada desde el problema hasta `/experimentos`. Integra Driver.js con una apertura pedagógica de mMTC mediante Blendy y continúa el tour en el laboratorio experimental.
+- **Demo rápida:** resume problema, mMTC, riesgo, URLLC, trade-off, LIVE y alcance del modelo.
+
+La exposición completa está diseñada para que el propio sitio funcione como material de sustentación. Driver.js actúa como narrador; las tarjetas Blendy permiten profundizar y los popovers/hover mantienen las definiciones disponibles durante la exploración libre.
+
+### LIVE durante la exposición
+
+El selector LIVE incluye tres referencias de Bogotá:
+
+1. Universidad Distrital · Sede Tecnológica — `4.580456693482892, -74.15738921821736`.
+2. Av. Carrera 68 × Av. de las Américas — `4.625802, -74.123718`.
+3. Av. Caracas × Calle 26 — `4.6166596589073, -74.072168554136`.
+
+También existe `Personalizado…` para mantener la capacidad de consultar cualquier punto WGS84 válido.
+
+Cambiar un preset **no realiza una consulta a TomTom**. La API se consulta únicamente al ejecutar la simulación en modo LIVE.
+
+### Recomendación práctica
+
+Antes de comenzar la clase:
+
+1. abrir la producción de Jiw 5G;
+2. verificar que `/` y `/experimentos` cargan;
+3. comprobar LIVE una vez si se quiere demostrar TomTom;
+4. regresar a DEMO;
+5. iniciar **Exposición completa**;
+6. mantener un Replay válido como respaldo si Internet o TomTom no están disponibles.
+
+El tour no altera el Simulation Engine. Solo coordina la presentación de los elementos ya existentes.

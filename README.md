@@ -214,3 +214,14 @@ El proyecto busca responder experimentalmente preguntas como:
 4. ¿Qué costo introduce la redundancia en términos de copias físicas?
 
 Las conclusiones deben formularse siempre como **resultados del modelo bajo sus parámetros y supuestos experimentales**, no como mediciones de una red 5G desplegada.
+
+## Exposición guiada
+
+La interfaz incluye dos recorridos con Driver.js:
+
+- **Exposición completa**: guía el proyecto desde el problema, mMTC y URLLC hasta LIVE, REPLAY y el laboratorio `/experimentos`.
+- **Demo rápida**: resume los conceptos principales cuando el tiempo de sustentación es corto.
+
+Driver.js actúa como narrador, Blendy permite profundizar en la implementación y los popovers/hover explican vocabulario técnico. Esta capa no modifica el motor ni los resultados de simulación.
+
+En modo LIVE existe un selector con tres puntos de Bogotá —incluyendo el cruce de referencia frente a la Universidad Distrital · Sede Tecnológica— y una opción para coordenadas personalizadas.

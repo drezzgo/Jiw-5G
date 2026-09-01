@@ -16,7 +16,7 @@ function ChangeCard({ title, value, detail, cost = false }: { title: ReactNode; 
 export function ComparisonSummary({ result }: { result: ScenarioExperimentResult }) {
   const { mmtc, urllc } = result.summary;
   return (
-    <section className="panel" aria-labelledby="comparison-title">
+    <section className="panel" aria-labelledby="comparison-title" data-tour="comparison">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Conclusión experimental inmediata</p>

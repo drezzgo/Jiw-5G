@@ -40,7 +40,7 @@ export function ReplayPanel({ capture, error, onLoaded, onError }: ReplayPanelPr
   };
 
   return (
-    <section className="panel panel--replay" aria-labelledby="replay-title">
+    <section className="panel panel--replay" aria-labelledby="replay-title" data-tour="replay-panel">
       <div className="panel__heading">
         <div><p className="section-kicker">REPLAY</p><h2 id="replay-title">Contexto reproducible</h2></div>
         <span className={`status-pill ${capture ? "status-pill--ok" : "status-pill--replay"}`}>{capture ? "LISTO" : "ESPERANDO JSON"}</span>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "./experimentos.module.css";
+import { ExperimentTourResume } from "../presentation/ExperimentTourResume";
 import {
   CORE_EXPERIMENT_SCENARIOS,
   DEFAULT_SCALABILITY_SENSOR_COUNTS,
@@ -144,7 +145,8 @@ export default function ExperimentPage() {
 
   return (
     <main className={styles.shell}>
-      <header className={styles.hero}>
+      <ExperimentTourResume />
+      <header className={styles.hero} data-tour="experiment-hero">
         <div>
           <p>Jiw 5G · FASE 9B.2</p>
           <h1>Laboratorio experimental</h1>
@@ -153,11 +155,11 @@ export default function ExperimentPage() {
         <Link href="/" className={styles.back}>← Volver al dashboard</Link>
       </header>
 
-      <section className={styles.notice}>
+      <section className={styles.notice} data-tour="experiment-notice">
         <strong>Lectura académica:</strong> estas son estadísticas descriptivas de ejecuciones del modelo. Varias semillas reducen la dependencia de una sola realización pseudoaleatoria, pero no convierten la simulación en evidencia de cumplimiento real de 3GPP ni en mediciones de una red comercial.
       </section>
 
-      <section className={styles.controls}>
+      <section className={styles.controls} data-tour="experiment-controls">
         <div className={styles.controlIntro}>
           <p>Diseño del experimento</p>
           <h2>¿Qué pregunta quieres responder?</h2>
@@ -172,25 +174,25 @@ export default function ExperimentPage() {
             <span>Alta densidad y congestión crítica con 50–1000 sensores. Sirve para observar cómo cambian mMTC y el canal al crecer la red.</span>
           </button>
         </div>
-        <div className={styles.controlRow}>
+        <div className={styles.controlRow} data-tour="experiment-replications">
           <label><span>Semilla inicial</span><input type="number" value={baseSeed} onChange={(event) => setBaseSeed(Number(event.target.value))} /></label>
           <label><span>Réplicas</span><input type="number" min={1} max={30} value={replications} onChange={(event) => setReplications(Math.min(30, Math.max(1, Number(event.target.value))))} /></label>
           <div className={styles.runEstimate}><span>Ejecuciones</span><strong>{expectedRuns}</strong><small>Baseline y Proposed comparten el mismo workload dentro de cada ejecución.</small></div>
-          <button className={styles.runButton} disabled={running} onClick={run}>{running ? "Ejecutando…" : "Ejecutar experimento"}</button>
+          <button className={styles.runButton} disabled={running} onClick={run} data-tour="experiment-run">{running ? "Ejecutando…" : "Ejecutar experimento"}</button>
         </div>
         <p className={styles.methodNote}>Las semillas usadas son consecutivas desde la semilla inicial. Son réplicas pseudoaleatorias deterministas; no afirmamos independencia estadística perfecta. Para exploración usa 5–10 réplicas. Para resultados finales prueba 20–30 si el navegador mantiene tiempos razonables.</p>
       </section>
 
       {result && (
         <>
-          <section className={styles.summaryStrip}>
+          <section className={styles.summaryStrip} data-tour="experiment-summary">
             <div><span>Réplicas por grupo</span><strong>{result.metadata.replications}</strong></div>
             <div><span>Ejecuciones totales</span><strong>{result.metadata.totalRuns}</strong></div>
             <div><span>Semillas</span><strong>{result.options.seeds[0]}–{result.options.seeds[result.options.seeds.length - 1]}</strong></div>
             <div><span>Fuente</span><strong>Sintética</strong></div>
           </section>
 
-          <section className={styles.panel}>
+          <section className={styles.panel} data-tour="experiment-results">
             <div className={styles.heading}><div><p>Resultados agregados</p><h2>Media de las réplicas</h2></div><span>{result.aggregates.length} grupos</span></div>
             <div className={styles.tableWrap}>
               <table>
@@ -223,7 +225,7 @@ export default function ExperimentPage() {
             </section>
           ))}
 
-          <section className={styles.panel}>
+          <section className={styles.panel} data-tour="experiment-exports">
             <div className={styles.heading}><div><p>Auditoría y análisis posterior</p><h2>Exportar resultados</h2></div></div>
             <p className={styles.exportCopy}>El CSV crudo conserva cada seed por separado. El CSV agregado contiene las medias por escenario y número de sensores. El JSON auditable conserva configuración, métricas por seed, comparaciones y estadísticas descriptivas, pero omite los logs masivos por mensaje/ruta para mantener una exportación segura en navegador.</p>
             <div className={styles.actions}>

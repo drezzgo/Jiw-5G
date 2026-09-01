@@ -11,7 +11,7 @@ export function UrllcPanel({ result }: { result: ScenarioExperimentResult }) {
   const proposed = result.urllc.proposed.metrics;
 
   return (
-    <section className="panel" aria-labelledby="urllc-title">
+    <section className="panel" aria-labelledby="urllc-title" data-tour="urllc">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Alertas críticas</p>
