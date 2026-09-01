@@ -1,0 +1,2 @@
+# Normalizar archivos de texto para mantener el repositorio portable.
+* text=auto eol=lf
