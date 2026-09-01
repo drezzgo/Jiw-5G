@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 
 export interface MetricRow {
-  label: string;
+  key?: string;
+  label: ReactNode;
   baseline: ReactNode;
   proposed: ReactNode;
-  note?: string;
+  note?: ReactNode;
 }
 
 export function MetricTable({ rows }: { rows: readonly MetricRow[] }) {
@@ -15,8 +16,8 @@ export function MetricTable({ rows }: { rows: readonly MetricRow[] }) {
         <span role="columnheader">Baseline</span>
         <span role="columnheader">Propuesta</span>
       </div>
-      {rows.map((row) => (
-        <div className="metric-table__row" role="row" key={row.label}>
+      {rows.map((row, index) => (
+        <div className="metric-table__row" role="row" key={row.key ?? index}>
           <span role="cell">
             {row.label}
             {row.note ? <small>{row.note}</small> : null}
