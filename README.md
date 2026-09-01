@@ -1,6 +1,13 @@
-# Smart Crosswalk 5G Simulator
+## Sobre el nombre Jiw 5G
 
-MVP académico WEB-FIRST para comparar estrategias mMTC y URLLC en un cruce peatonal escolar inteligente.
+Jiw 5G adopta su nombre como una referencia al pueblo Jiw presente en la
+región del Guaviare, Colombia. El nombre busca darle al proyecto una identidad
+territorial y latinoamericana, en lugar de recurrir innecesariamente a una
+denominación íntegramente en inglés.
+
+La relación con el proyecto también parte del concepto de movilidad peatonal,
+ya que el sistema estudia un escenario de protección de personas que transitan
+por un cruce escolar.
 
 ## Estado
 
