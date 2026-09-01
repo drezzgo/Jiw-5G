@@ -22,12 +22,12 @@ Se adopta simulación de tiempo discreto con pasos de `stepMs`. Es una abstracci
 
 - Cada sensor intenta transmitir periódicamente cada `periodicIntervalMs`.
 - Los intentos del mismo paso compiten por una capacidad finita `channelCapacityPerStep`.
-- Si la capacidad se excede, el modelo contabiliza colisión/congestión según la regla que se implemente en FASE 2.
+- `channelCapacityPerStep` representa cuántas transmisiones mMTC ordinarias pueden ser atendidas en un paso. Si la demanda la excede, los intentos excedentes se contabilizan como colisión/congestión. Es una abstracción y no un modelo PHY/MAC de 5G NR.
 - Se permiten retransmisiones hasta `maxRetries`.
 
 ### mMTC PROPOSED
 
-- Cada sensor genera mediciones, pero transmite solo cuando ocurre una excepción/evento relevante según un criterio parametrizable.
+- Cada sensor genera oportunidades periódicas de medición, pero transmite solo cuando la medición se marca como cambio/evento relevante. En el MVP esa relevancia se genera con `exceptionProbability`, un parámetro experimental del modelo.
 - Los mensajes ordinarios que compiten aplican backoff uniforme entero entre `backoffMinSteps` y `backoffMaxSteps`.
 - Una alerta ya clasificada como URLLC crítica nunca recibe este backoff.
 
@@ -48,16 +48,17 @@ Se adopta simulación de tiempo discreto con pasos de `stepMs`. Es una abstracci
 
 ### mMTC
 
-- `generatedMessages`: mensajes/mediciones generadas por sensores.
-- `transmittedMessages`: intentos de transmisión efectivamente puestos en el canal (definiremos si incluye reintentos; decisión recomendada: sí para carga de canal, además de mantener `retries` separado).
-- `avoidedTransmissions = generatedMessages - initialTransmissionsRequested` en PROPOSED. No debe mezclarse con pérdidas o colisiones.
-- `collisions`: intentos que fallan por competencia según la regla de acceso.
-- `retries`: intentos adicionales posteriores al primer intento.
+- `generatedMessages`: oportunidades lógicas de reporte/mediciones candidatas generadas por el modelo de sensores antes de aplicar la estrategia.
+- `transmittedMessages`: mensajes lógicos distintos que realizan al menos un intento de transmisión. No incluye los reintentos como mensajes nuevos.
+- `avoidedTransmissions = generatedMessages - transmittedMessages` en PROPOSED, cuando la medición no supera el criterio de excepción. No debe mezclarse con pérdidas o colisiones.
+- `physicalTransmissionAttempts = transmittedMessages + retries`: métrica interna de auditoría usada para carga y energía.
+- `collisions`: intentos físicos que fallan por exceder la capacidad simplificada del canal en un paso.
+- `retries`: intentos físicos adicionales posteriores al primer intento.
 - `successfulMessages`: mensajes lógicos entregados.
 - `failedMessages`: mensajes lógicos agotados/descartados.
-- `successRate = successfulMessages / generatedMessages` (si `generatedMessages = 0`, se reporta 0 y se marca muestra vacía en la UI).
-- `channelUtilization = occupiedTransmissionSlots / availableTransmissionSlots`.
-- `energyProxy = N_tx * E_tx + N_idle * E_idle`.
+- `successRate = successfulMessages / transmittedMessages`; las transmisiones evitadas no se contabilizan como fallos.
+- `channelUtilization = occupiedCapacityUnits / availableCapacityUnits`, acotada a `[0,1]`.
+- `energyProxy = N_tx_attempts * E_tx + N_idle_sensor_steps * E_idle`.
 
 `energyProxy` es una métrica adimensional simplificada, no consumo físico real en J o Wh.
 
@@ -122,6 +123,14 @@ FASE 1 implementada ahora:
 - misma seed + mismos parámetros + timestamp fijo => mismo resultado;
 - semillas distintas => stream distinto;
 - la regla de evento crítico exige las tres condiciones.
+
+FASE 2 implementa además:
+- workload mMTC determinista compartido por BASELINE y PROPOSED;
+- fase aleatoria inicial por sensor para no sincronizar artificialmente todos los dispositivos;
+- reintento BASELINE al paso siguiente;
+- backoff uniforme entero PROPOSED entre `backoffMinSteps` y `backoffMaxSteps`;
+- cálculo de métricas mMTC directamente desde logs como fuente única de verdad;
+- `SCENARIO_CONGESTION_CRITICAL` usa `exceptionProbability = 0.2` y `channelCapacityPerStep = 8` como parámetros experimentales para que la estrategia PROPOSED todavía experimente competencia y permita observar el backoff. Estos valores no son requisitos 3GPP.
 
 FASES 2–4, obligatorias antes de cerrar el MVP:
 - pérdida 0 en ruta funcional no produce pérdidas atribuibles al modelo de ruta;

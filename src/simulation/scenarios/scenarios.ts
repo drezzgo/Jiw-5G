@@ -1,7 +1,7 @@
 import type { ScenarioId, SimulationConfig } from "../core/types";
 
 const base: Omit<SimulationConfig, "scenarioId"> = {
-  simulatorVersion: "0.1.0-phase1",
+  simulatorVersion: "0.2.0-phase2",
   seed: 12345,
   mode: "DEMO",
   sensorCount: 100,
@@ -70,6 +70,13 @@ const overrides: Record<ScenarioId, Partial<SimulationConfig>> = {
     sensorCount: 300,
     trafficLevel: "HIGH",
     vehicleArrivalRate: 0.8,
+    mmtc: {
+      ...base.mmtc,
+      // Experimental values chosen so PROPOSED still experiences contention
+      // and therefore exercises its random backoff mechanism.
+      exceptionProbability: 0.2,
+      channelCapacityPerStep: 8,
+    },
     risk: {
       ...base.risk,
       pedestrianProbability: 0.2,

@@ -5,3 +5,8 @@ export * from "../risk/evaluateRisk";
 export * from "../random/prng";
 export * from "../events/EventBus";
 export * from "../events/LocalEventBus";
+export * from "../mmtc/types";
+export * from "../mmtc/workload";
+export * from "../mmtc/simulate";
+export * from "../mmtc/compare";
+export * from "../mmtc/metrics";

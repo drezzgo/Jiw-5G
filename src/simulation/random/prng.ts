@@ -40,3 +40,17 @@ export class Mulberry32 implements DeterministicRandom {
     return Math.floor(this.between(minInclusive, maxInclusive + 1));
   }
 }
+
+/**
+ * Derives deterministic independent-ish streams from one experiment seed.
+ * This prevents adding a new subsystem from consuming the random sequence of
+ * another subsystem and silently changing previous results.
+ */
+export function deriveSeed(seed: number, namespace: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < namespace.length; i += 1) {
+    hash ^= namespace.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (seed ^ hash) >>> 0;
+}
