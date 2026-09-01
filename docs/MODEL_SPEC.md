@@ -35,14 +35,18 @@ Se adopta simulación de tiempo discreto con pasos de `stepMs`. Es una abstracci
 
 - Una sola ruta (Ruta A).
 - Prioridad ordinaria/cola compartida.
-- Retardo y pérdida se toman de la configuración de la ruta.
+- El efecto de compartir cola se abstrae mediante `baselineSharedQueueDelayMs`, un retardo experimental explícito del escenario. En FASE 3 no se modela un scheduler 5G ni una cola NR real.
+- Retardo físico y pérdida se toman de la configuración de Ruta A.
 
 ### URLLC PROPOSED
 
 - Alerta con prioridad superior.
-- Se envían dos copias por Ruta A y Ruta B.
-- Las rutas se modelan independientes por supuesto experimental.
-- La primera copia válida recibida determina la latencia efectiva; la otra se descarta lógicamente.
+- La prioridad se abstrae mediante un retardo residual `proposedPriorityQueueDelayMs`, normalmente menor que el baseline. Es un supuesto de modelo, no una garantía 3GPP.
+- Se envían simultáneamente dos copias por Ruta A y Ruta B cuando ambas están habilitadas.
+- Las rutas se modelan independientes por supuesto experimental y usan streams pseudoaleatorios derivados distintos.
+- BASELINE y PROPOSED comparten exactamente la misma realización física de Ruta A para evitar comparar muestras aleatorias distintas.
+- La primera copia válida recibida determina la latencia efectiva; cualquier segunda copia válida se registra como descartada lógicamente, aunque ya cuenta como copia física enviada.
+- Para cada ruta: `physicalLatencyMs = baseLatencyMs + U(0, jitterMs)`. La pérdida se evalúa con `packetLoss`.
 
 ## 4. Métricas y fórmulas
 
@@ -70,9 +74,9 @@ Sea `L` el conjunto de latencias de alertas entregadas:
 - `deliveredAlerts = |L|`.
 - `lostAlerts = N - deliveredAlerts`.
 - `latencyMean = sum(L)/|L|`.
-- `latencyMedian = P50(L)`.
-- `p95 = P95(L)`.
-- `p99 = P99(L)` solo se interpretará cuando el tamaño de muestra sea suficiente; el software puede calcularlo, pero el informe debe advertir muestras pequeñas.
+- `latencyMedian`: mediana estadística; para muestras pares se promedian los dos valores centrales.
+- `p95 = P95(L)` mediante método nearest-rank.
+- `p99 = P99(L)` mediante método nearest-rank; solo se interpretará cuando el tamaño de muestra sea suficiente. El software puede calcularlo con muestras pequeñas, pero el informe debe advertir su baja robustez estadística.
 - `maxLatency = max(L)`.
 - `deliveredWithinThreshold = count(latency <= latencyThresholdMs)`.
 - `reliability = deliveredWithinThreshold / criticalEvents`.
@@ -87,7 +91,7 @@ No se interpretará `reliability` como cumplimiento real 3GPP.
 - Escenario: `sensorCount`, `trafficLevel`, `vehicleArrivalRate`.
 - Riesgo: probabilidades sintéticas, rango de riesgo, `threshold`, ventana crítica forzada opcional.
 - mMTC: periodo, probabilidad/criterio de excepción, capacidad por paso, reintentos, límites de backoff, unidades proxy de energía.
-- URLLC: umbral experimental de latencia y por ruta: habilitación, latencia base, jitter, pérdida.
+- URLLC: umbral experimental de latencia, `baselineSharedQueueDelayMs`, `proposedPriorityQueueDelayMs` y por ruta: habilitación, latencia base, jitter, pérdida.
 
 ## 6. Flujo exacto de una ejecución
 
@@ -115,7 +119,8 @@ No se interpretará `reliability` como cumplimiento real 3GPP.
 7. Los datos TomTom, cuando se integren, describen tráfico vial externo y no mMTC/URLLC.
 8. Toda regla TomTom -> `trafficLevel`/`vehicleArrivalRate` debe quedar parametrizada y etiquetada como supuesto de transformación.
 9. `latencyThresholdMs` es un requisito experimental mientras no se vincule explícitamente a una fuente; no debe presentarse como KPI 3GPP por defecto.
-10. El uso de Mulberry32 garantiza repetibilidad de nuestro software con la misma implementación/versión; no es un RNG criptográfico.
+10. `baselineSharedQueueDelayMs` y `proposedPriorityQueueDelayMs` son abstracciones configurables del efecto de cola/prioridad. En FASE 3 no se simula un scheduler 5G real ni se deriva automáticamente el retardo desde `trafficLevel`.
+11. El uso de Mulberry32 garantiza repetibilidad de nuestro software con la misma implementación/versión; no es un RNG criptográfico.
 
 ## 8. Pruebas
 
@@ -132,9 +137,19 @@ FASE 2 implementa además:
 - cálculo de métricas mMTC directamente desde logs como fuente única de verdad;
 - `SCENARIO_CONGESTION_CRITICAL` usa `exceptionProbability = 0.2` y `channelCapacityPerStep = 8` como parámetros experimentales para que la estrategia PROPOSED todavía experimente competencia y permita observar el backoff. Estos valores no son requisitos 3GPP.
 
-FASES 2–4, obligatorias antes de cerrar el MVP:
-- pérdida 0 en ruta funcional no produce pérdidas atribuibles al modelo de ruta;
-- redundancia independiente mantiene o mejora probabilidad de entrega;
-- transmisión por excepción reduce `transmittedMessages` cuando evita mensajes;
-- `energyProxy` disminuye al disminuir transmisiones, bajo los mismos demás términos;
-- métricas del dashboard se recalculan/contrastan con logs.
+FASE 3 implementa además:
+- workload URLLC determinista compartido por BASELINE y PROPOSED;
+- eventos críticos derivados del mismo motor de riesgo de FASE 1;
+- `packetLoss = 0` no produce pérdidas atribuibles al modelo probabilístico de una ruta funcional;
+- `packetLoss = 1` hace fallar siempre esa ruta por el modelo de pérdida;
+- Ruta B puede rescatar una alerta cuando Ruta A falla;
+- primera copia válida = copia de menor latencia total;
+- redundancia independiente mantiene o mejora la fiabilidad experimental frente a Ruta A sola bajo los mismos resultados físicos de Ruta A;
+- prioridad modelada como menor retardo de cola explícito, especialmente observable en `SCENARIO_CONGESTION_CRITICAL`;
+- métricas URLLC calculadas únicamente desde logs;
+- overhead físico esperado = 1x para BASELINE y 2x para PROPOSED cuando A y B están habilitadas.
+
+FASE 4–5, obligatorias antes de cerrar el MVP:
+- consolidar comparación mMTC + URLLC por escenario y estrategia;
+- verificar tablas agregadas contra logs;
+- exportar resultados y garantizar que las métricas del dashboard correspondan exactamente a los logs.

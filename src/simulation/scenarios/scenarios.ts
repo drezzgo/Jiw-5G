@@ -1,7 +1,7 @@
 import type { ScenarioId, SimulationConfig } from "../core/types";
 
 const base: Omit<SimulationConfig, "scenarioId"> = {
-  simulatorVersion: "0.2.0-phase2",
+  simulatorVersion: "0.3.0-phase3",
   seed: 12345,
   mode: "DEMO",
   sensorCount: 100,
@@ -28,6 +28,10 @@ const base: Omit<SimulationConfig, "scenarioId"> = {
   },
   urllc: {
     latencyThresholdMs: 5,
+    // Experimental queueing parameters. They are explicit scenario inputs,
+    // not values derived from 3GPP or automatically inferred from trafficLevel.
+    baselineSharedQueueDelayMs: 2,
+    proposedPriorityQueueDelayMs: 0.2,
     routeA: { enabled: true, baseLatencyMs: 1.2, jitterMs: 0.5, packetLoss: 0.02 },
     routeB: { enabled: true, baseLatencyMs: 1.6, jitterMs: 0.8, packetLoss: 0.03 },
   },
@@ -38,11 +42,21 @@ const overrides: Record<ScenarioId, Partial<SimulationConfig>> = {
     sensorCount: 50,
     trafficLevel: "LOW",
     vehicleArrivalRate: 0.18,
+    urllc: {
+      ...base.urllc,
+      baselineSharedQueueDelayMs: 1,
+      proposedPriorityQueueDelayMs: 0.2,
+    },
   },
   SCENARIO_HIGH_DENSITY: {
     sensorCount: 300,
     trafficLevel: "HIGH",
     vehicleArrivalRate: 0.7,
+    urllc: {
+      ...base.urllc,
+      baselineSharedQueueDelayMs: 6,
+      proposedPriorityQueueDelayMs: 0.3,
+    },
     risk: {
       ...base.risk,
       pedestrianProbability: 0.15,
@@ -70,6 +84,11 @@ const overrides: Record<ScenarioId, Partial<SimulationConfig>> = {
     sensorCount: 300,
     trafficLevel: "HIGH",
     vehicleArrivalRate: 0.8,
+    urllc: {
+      ...base.urllc,
+      baselineSharedQueueDelayMs: 8,
+      proposedPriorityQueueDelayMs: 0.3,
+    },
     mmtc: {
       ...base.mmtc,
       // Experimental values chosen so PROPOSED still experiences contention
