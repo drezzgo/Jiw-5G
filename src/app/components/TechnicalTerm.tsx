@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { getGlossaryEntry, type GlossaryId } from "../explainability/catalog";
+import "../phase9b.css";
 
 export function TechnicalTerm({ id, children }: { id: GlossaryId; children?: ReactNode }) {
   const entry = getGlossaryEntry(id);
@@ -18,8 +19,11 @@ export function TechnicalTerm({ id, children }: { id: GlossaryId; children?: Rea
           <strong>{entry.term}</strong>
           <span className={`knowledge-badge knowledge-badge--${entry.kind.toLowerCase()}`}>{entry.kind.replaceAll("_", " ")}</span>
         </div>
-        <p><b>En palabras simples:</b> {entry.simple}</p>
-        <p><b>Técnicamente:</b> {entry.technical}</p>
+        <p className="term-popover__simple">{entry.simple}</p>
+        <details className="term-popover__technical">
+          <summary>Detalle técnico breve</summary>
+          <p>{entry.technical}</p>
+        </details>
       </div>
     </details>
   );

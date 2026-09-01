@@ -2,18 +2,20 @@ import type { ScenarioExperimentResult } from "../../simulation/experiments/type
 import { formatInteger, formatMilliseconds, formatNumber, formatPercent } from "../dashboard/format";
 import { ComparisonBar } from "./ComparisonBar";
 import { ExploreTopicButton } from "./ExploreTopicButton";
+import { HoverTerm } from "./HoverTerm";
 import { MetricTable } from "./MetricTable";
 import { TechnicalTerm } from "./TechnicalTerm";
 
 export function UrllcPanel({ result }: { result: ScenarioExperimentResult }) {
   const baseline = result.urllc.baseline.metrics;
   const proposed = result.urllc.proposed.metrics;
+
   return (
     <section className="panel" aria-labelledby="urllc-title">
       <div className="panel__heading">
         <div>
           <p className="section-kicker">Alertas críticas</p>
-          <h2 id="urllc-title"><TechnicalTerm id="urllc">URLLC</TechnicalTerm> · Baseline vs propuesta</h2>
+          <h2 id="urllc-title"><TechnicalTerm id="urllc">URLLC</TechnicalTerm> · <HoverTerm id="baseline">Baseline</HoverTerm> vs propuesta</h2>
         </div>
         <div className="panel-heading-actions">
           <span className="panel-chip"><TechnicalTerm id="threshold">Umbral experimental</TechnicalTerm> {formatMilliseconds(result.config.urllc.latencyThresholdMs)}</span>
@@ -23,7 +25,7 @@ export function UrllcPanel({ result }: { result: ScenarioExperimentResult }) {
               <div className="evidence-grid">
                 <div><span>Fiabilidad</span><strong>{formatPercent(baseline.reliability)} → {formatPercent(proposed.reliability)}</strong></div>
                 <div><span>Latencia media</span><strong>{formatMilliseconds(baseline.latencyMean)} → {formatMilliseconds(proposed.latencyMean)}</strong></div>
-                <div><span>Overhead</span><strong>{formatNumber(baseline.redundancyOverhead)}x → {formatNumber(proposed.redundancyOverhead)}x</strong></div>
+                <div><span><HoverTerm id="overhead">Overhead</HoverTerm></span><strong>{formatNumber(baseline.redundancyOverhead)}x → {formatNumber(proposed.redundancyOverhead)}x</strong></div>
               </div>
             }
           />
@@ -40,7 +42,7 @@ export function UrllcPanel({ result }: { result: ScenarioExperimentResult }) {
         { key: "max", label: "Latencia máxima", baseline: formatMilliseconds(baseline.maxLatency), proposed: formatMilliseconds(proposed.maxLatency) },
         { key: "reliability", label: <TechnicalTerm id="reliability">Fiabilidad experimental</TechnicalTerm>, baseline: formatPercent(baseline.reliability), proposed: formatPercent(proposed.reliability) },
         { key: "threshold", label: "Dentro del umbral", baseline: formatInteger(baseline.deliveredWithinThreshold), proposed: formatInteger(proposed.deliveredWithinThreshold) },
-        { key: "overhead", label: <TechnicalTerm id="overhead">Overhead de redundancia</TechnicalTerm>, baseline: `${formatNumber(baseline.redundancyOverhead)}x`, proposed: `${formatNumber(proposed.redundancyOverhead)}x` },
+        { key: "overhead", label: <HoverTerm id="overhead">Overhead de redundancia</HoverTerm>, baseline: `${formatNumber(baseline.redundancyOverhead)}x`, proposed: `${formatNumber(proposed.redundancyOverhead)}x` },
       ]} />
       <div className="chart-stack" aria-label="Gráficas comparativas URLLC">
         <ComparisonBar label="¿Se reduce la latencia media?" baseline={baseline.latencyMean ?? 0} proposed={proposed.latencyMean ?? 0} format={formatMilliseconds} />
