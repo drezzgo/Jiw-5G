@@ -1,10 +1,17 @@
 import type { TrafficDataProvider } from "./TrafficDataProvider";
-import type { TrafficSnapshot } from "../types";
+import type { ReplayCapture, TrafficSnapshot } from "../types";
 
 export class ReplayTrafficProvider implements TrafficDataProvider {
-  constructor(private readonly replay: TrafficSnapshot) {}
+  private readonly replay: ReplayCapture;
+
+  constructor(replay: ReplayCapture) {
+    this.replay = structuredClone(replay);
+  }
 
   async getSnapshot(): Promise<TrafficSnapshot> {
-    return structuredClone(this.replay);
+    return {
+      ...structuredClone(this.replay.traffic),
+      source: "REPLAY",
+    };
   }
 }
